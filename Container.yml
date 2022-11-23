@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: Update Repo Index
+    apt:
+      upgrade: dist
+      update_cache: yes
+    changed_when: false
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Install Docker
+    apt:
+      name: docker.io
+      state: latest
+
+  - name: Install Docker SDK
+    apt:
+      name: python3-docker
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: Docker Permissions
+    shell: 'sudo usermod -aG docker $USER'
+
+  - name: Enable/Start Docker
+    service:
+      name: docker
+      state: started
+
+  - name: Copy Dockerfile
+    copy: src=/Chinel_HOA11/dockerfile dest=/chinel/container
+
+  - name: Docker Build
+    docker_image:
+      name: Containerization
+      build:
+        path: /chinel/container
+        args:
+          listen_port: 8080
+      source: build
